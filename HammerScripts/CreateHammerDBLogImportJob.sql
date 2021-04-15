@@ -2,7 +2,8 @@ USE [msdb]
 GO
 
 /****** Object:  Job [HammerDBLogImport]    Script Date: 13/04/2021 21:24:10 ******/
-EXEC msdb.dbo.sp_delete_job @job_id=N'd56a6450-a983-404f-a078-b3633829f676', @delete_unused_schedule=1
+IF  EXISTS (SELECT job_id FROM msdb.dbo.sysjobs_view WHERE name = N'HammerDBLogImport')
+EXEC msdb.dbo.sp_delete_job @job_name=N'HammerDBLogImport', @delete_unused_schedule=1
 GO
 
 /****** Object:  Job [HammerDBLogImport]    Script Date: 13/04/2021 21:24:10 ******/
