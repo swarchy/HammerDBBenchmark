@@ -7,7 +7,7 @@ Param(
 
 if (Test-Path $FileToCheck -PathType leaf) 
 {
-    Copy-Item -Path $FileToCheck -Destination $NewPath 
+    Copy-Item -Path $FileToCheck -Destination $NewPath -ErrorAction stop
     "$FileToCheck moved to $NewPath"
 }
 }
