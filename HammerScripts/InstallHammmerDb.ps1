@@ -78,7 +78,7 @@ Write-Log -Message "Copied Files from $Fileshare\HammerScripts\ to $Destination"
 try{
 #if (Test-Path "$Destination" -PathType leaf) 
 #{ 
-Copy-Item -Path "$HamMedia\*" -Destination $Destination -Recurse  -ToSession $Session }#}
+Copy-Item -Path "$HamMedia\*" -Destination "$Destination\HammerMedia" -Recurse  -ToSession $Session }#}
 catch {
     Write-Error -Message "Error whilst copying HammerDb executables from $HamMedia\ to $Destination see error log within $ELogFile"
     Write-Log -Message "Error whilst copying HammerDb executables from $HamMedia\ to $Destination :  $_" -Severity Error    
@@ -111,4 +111,4 @@ Write-Log -Message "successfully executed $fileshare\CreateHammerDBLogImportJob.
 write-output "Hammer DB Install completed check logfile within $ELogFile for more info `n open in notepad with command: Notepad $ELogFile"
 }
 
-InstallHammerDb -SourceDir "D:\Temp\HammerScripts" -HamMedia "\\DESKTOP-J7VOGRI\Images\HammerDBJob\HammerMedia" -SQLInstance "SQL02" -ELogFileDir "\\sql01\HammerRemoteLogs\" -Destination "D:\HammerDbBenchmark"
+InstallHammerDb -SourceDir "F:\HammerDBTutorial\HammerScripts" -HamMedia "F:\HammerDBTutorial\HammerMedia\HammerDB-4.1-Win\HammerDB-4.1" -SQLInstance "SQL02" -ELogFileDir "\\sql01\HammerRemoteLogs\" -Destination "D:\HammerDbBenchmark"

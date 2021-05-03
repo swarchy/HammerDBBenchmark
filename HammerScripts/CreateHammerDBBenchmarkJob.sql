@@ -19,7 +19,7 @@ IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 END
 
 DECLARE @jobId BINARY(16)
-EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'HammerDB_BenchMark', 
+EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'HammerDB_Benchmark', 
 		@enabled=1, 
 		@notify_level_eventlog=0, 
 		@notify_level_email=0, 
@@ -57,7 +57,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Build Ne
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'CmdExec', 
-		@command=N'cmd.exe /c "D:\HammerDbBenchmark\HammerDB-3.3-Win\HammerDB-3.3\AutoRunBuildBatch.cmd"', 
+		@command=N'cmd.exe /c "D:\HammerDbBenchmark\HammerMedia\AutoRunBuildBatch.cmd"', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 /****** Object:  Step [DelayForBuild]    Script Date: 15/04/2021 15:15:16 ******/
@@ -90,9 +90,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Reconfig
 		@os_run_priority=0, @subsystem=N'TSQL', 
 		@command=N'
 ALTER DATABASE [tpcc] SET RECOVERY SIMPLE WITH NO_WAIT
-
 ALTER DATABASE [tpcc] MODIFY FILE ( NAME = N''tpcc'', SIZE = 2097152KB )
-
 ALTER DATABASE [tpcc] MODIFY FILE ( NAME = N''tpcc_log'', SIZE = 1048576KB )', 
 		@database_name=N'master', 
 		@flags=0
@@ -108,7 +106,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Run Benc
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'CmdExec', 
-		@command=N'cmd.exe /c "D:\HammerDbBenchmark\HammerDB-3.3-Win\HammerDB-3.3\AutoRunWorkload.cmd"', 
+		@command=N'cmd.exe /c "D:\HammerDbBenchmark\HammerMedia\AutoRunWorkload.cmd"', 
 		@flags=32
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
@@ -121,5 +119,3 @@ QuitWithRollback:
     IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
 EndSave:
 GO
-
-
