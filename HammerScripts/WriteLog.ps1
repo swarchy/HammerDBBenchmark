@@ -19,5 +19,5 @@
         Time = (Get-Date -f g)
         Message = $Message
         Severity = $Severity
-    } | Out-File -FilePath $ELogFile -Append #-NoTypeInformation
+    } | Out-File -FilePath $ELogFile -Append | Format-Table -AutoSize #-NoTypeInformation
  }

@@ -1,49 +1,79 @@
-﻿##Load scripts from same folder
-## https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/use-psscriptroot-to-load-resources
-. "$PSScriptRoot\CreateLogFolders.ps1" 
-. "$PSScriptRoot\WriteLog.ps1" 
-. "$PSScriptRoot\MoveItems.ps1" 
+﻿Function ImportHammerLogs {
+    [cmdletBinding()]
+    Param(
+        [parameter(Mandatory = $True)]
+        [string] $BaseFolder,
+        [string] $HammerLogsFolder,
+        [string] $WriteOp,
+        [parameter(Mandatory = $False)]
+        [string] $LogSQLInstance,
+        [parameter(Mandatory = $False)]
+        [string] $LogDatabase,
+        [parameter(Mandatory = $False)]
+        [string] $LogTable)
+
+
+    ##Load scripts from same folder
+    ## https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/use-psscriptroot-to-load-resources
+    . "$BaseFolder\CreateLogFolders.ps1" 
+    . "$BaseFolder\WriteLog.ps1" 
+    . "$BaseFolder\MoveItems.ps1" 
 
 
 
-# Settings 
-$LogTime = Get-Date -Format "MMMM-dd_HH-mm-ss"
-##$LogSQLInstance = "SQL01" 
-##$LogDatabase = "SwarchDBA"
-##$LogTable = "dbo.HammerDbResults"
-$ELogFile = "D:\HammerDbBenchmark\HammerLog\"+$LogTime+"_HammerDBImportLog.txt"
-$serverName = $env:computername
-$LogFolder = "C:\temp\"
-$HammerDBResults = "D:\HammerDbBenchmark\HammerResults\HammerDBResults.csv"
-$ErrorActionPreference = "stop"
-$ProcessedFolder = "D:\HammerDbBenchmark\HammerProcessed"
+    $LogTime = Get-Date -Format "MMMM-dd_HH-mm-ss"
+    $ELogFile = "$BaseFolder\HammerLog\" + $LogTime + "_HammerDBImportLog.txt"
+    $serverName = $env:computername
+    $LogFolder = "$HammerLogsFolder\"
+    $HammerDBResults = "$BaseFolder\HammerResults\HammerDBResults.csv"
+    $ErrorActionPreference = "stop"
+    $ProcessedFolder = "$BaseFolder\HammerProcessed"
 
-
-try {
-    CreateDir -DirectoryToCreate "D:\HammerDbBenchmark\HammerLog"
-    CreateDir -DirectoryToCreate "D:\HammerDbBenchmark\HammerResults" 
-    CreateDir -DirectoryToCreate "D:\HammerDbBenchmark\HammerProcessed" 
-}
-catch {
-    Write-Log -Message "Error was: $_" -Severity Error 
-    throw   
-    
-}
-
-try {
-    # Create consolidated HammerDB results file if it doesn't exist
-    if (-Not (Test-Path $HammerDBResults)) {
-        Set-Content -Path $HammerDBResults "Hostname,EndTime,Users,TPM,NOPM,FileName"
+    $BaseFolder = "D:\HammerDbBenchmark"
+    try {
+        CreateDir -DirectoryToCreate "$BaseFolder\HammerLog" -ComputerName $serverName
+        CreateDir -DirectoryToCreate "$BaseFolder\HammerResults" -ComputerName $serverName
+        CreateDir -DirectoryToCreate "$BaseFolder\HammerProcessed" -ComputerName $serverName
     }
-}
-catch {
-    Write-Log -Message "Error was: $_" -Severity Error    
-    throw
-}
+    catch {
+        Write-Log -Message "Error was: $_" -Severity Error 
+        throw   
+    
+    }
 
-# Adds freindly name to log files and converts to txt format
-try {
-    if (Test-Path $LogFolder ) {
+    if ($WriteOp -ne "csv") {
+        ##Check if DBATools Module is installed, this is required for creating SQL Agent jobs 
+        if (Get-Module -ListAvailable -Name DbaTools) {
+    
+        }
+        else {
+            Write-Host "Module does not exist, Attempting to install DBA TOOLS" -ForegroundColor Yellow
+            Try {
+                Find-Module -Name DbaTools -ErrorAction Stop | Install-Module -ErrorAction Stop
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.Message
+                write-host "You need to Install DBATools before continuing" -ForegroundColor yellow
+                Write-Log -Message "Error was: $_" -Severity Error 
+                Exit
+            }
+
+        }
+    }
+    try {
+        # Create consolidated HammerDB results file if it doesn't exist
+        if (-Not (Test-Path $HammerDBResults)) {
+            Set-Content -Path $HammerDBResults "Hostname,EndTime,Users,TPM,NOPM,FileName"
+        }
+    }
+    catch {
+        Write-Log -Message "Error was: $_" -Severity Error    
+        throw
+    }
+
+    # Adds freindly name to log files and converts to txt format
+    try {
+        if (Test-Path $LogFolder ) {
 
         
             Get-ChildItem  $LogFolder -Filter hammerdb_*.log  | ForEach { Rename-Item -Path $_.FullName -NewName "$($_.DirectoryName)\$serverName$("_HammerDb_")$($_.LastWriteTime.toString("ddMMyyyyHHmmss"))$(".txt")" }
@@ -103,14 +133,21 @@ try {
                 }
 
  
-                #Can uncomment below line if you want data to be imported into a SQL database instead of csv format
-                ##   Write-DbaDbTableData -SqlInstance $LogSQLInstance -Database $LogDatabase -InputObject $SQL -Table $LogTable -EnableException -AutoCreateTable
+                switch ( $WriteOp ) {
+                    "sql" { Write-DbaDbTableData -SqlInstance $LogSQLInstance -Database $LogDatabase -InputObject $SQL -Table $LogTable -EnableException -AutoCreateTable }
+                    "csv" {
+                        Add-Content -Path $HammerDBResults "$ServerName,$WriteTime,$NumUsers,$TPM,$NOPM,$FullName" -ErrorAction Stop
+                        MoveItems -FileToCheck $file.FullName -NewPath $ProcessedFolder 
+                    }
+                    "both" {
+                        Write-DbaDbTableData -SqlInstance $LogSQLInstance -Database $LogDatabase -InputObject $SQL -Table $LogTable -EnableException -AutoCreateTable
+                        MoveItems -FileToCheck $file.FullName -NewPath $ProcessedFolder 
+                    }
+                }
 
-                Add-Content -Path $HammerDBResults "$ServerName,$WriteTime,$NumUsers,$TPM,$NOPM,$FullName" -ErrorAction Stop
-                MoveItems -FileToCheck $file.FullName -NewPath $ProcessedFolder 
-               
                 
 
+                
 
 
             }
@@ -118,18 +155,18 @@ try {
             Write-Log -Message "Processed $Count log files" -Severity "Information"
 
       
+        }
+        else {
+            # Write-Host "$hostname : cannot read $HammerDBLog"
+            ##Add-Content -Path $HammerDBRunlog "$hostname : cannot read $HammerDBLog"
+            write-host "cannot read file"
+        }
     }
-    else {
-        # Write-Host "$hostname : cannot read $HammerDBLog"
-        ##Add-Content -Path $HammerDBRunlog "$hostname : cannot read $HammerDBLog"
-        write-host "cannot read file"
+    catch {
+        Write-Log -Message "Error was: $_" -Severity Error    
+        throw
     }
-}
-catch {
-    Write-Log -Message "Error was: $_" -Severity Error    
-    throw
+
 }
 
-
-
-
+##ImportHammerLogs -BaseFolder "D:\HammerDbBenchmark" -HammerLogsFolder "C:\Users\SVC_SQLA\AppData\Local\Temp" -WriteOp "csv" -LogSQLInstance "sql02" -LogDatabase "HammerResults" -LogTable "SQL02_HammerBenchmarkRlt"

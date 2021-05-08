@@ -18,6 +18,7 @@ Param(
 # Settings 
 $LogTime = Get-Date -Format "MMMM-dd_HH-mm-ss"
 $ELogFile = $ELogFileDir+$LogTime+"_HammerDBSetupLog_"+$SQLInstance+".txt"
+$RoboLog = $ELogFileDir+$LogTime+"_RoboCopyDBSetupLog_"+$SQLInstance+".txt"
 $Fileshare = $SourceDir
 
 ##Check if DBATools Module is installed, this is required for creating SQL Agent jobs 
@@ -102,7 +103,9 @@ Write-Log -Message "Copied Files from $Fileshare\HammerScripts\ to $Destination"
 
 ##Copies the HammerDB installation Media from local machine to target machine 
 try{ 
-Copy-Item -Path "$HamMedia\*" -Destination "$Destination\HammerMedia" -Recurse  -ToSession $Session -ErrorAction stop}
+#Copy-Item -Path "$HamMedia\*" -Destination "$Destination\HammerMedia" -Recurse -ToSession $Session -ErrorAction stop}
+$Destination= "\\"+$SQLInstance+"\" + $Destination.Replace(":\", "$\")
+Robocopy "$HamMedia\" "$Destination\HammerMedia" /E	/IS /Log:$RoboLog}
 catch {
     Write-Error -Message "Error whilst copying HammerDb executables from $HamMedia\ to $Destination see error log within $ELogFile"
     Write-Log -Message "Error whilst copying HammerDb executables from $HamMedia\ to $Destination :  $_" -Severity Error    
@@ -138,6 +141,6 @@ write-output "Hammer DB Install completed check logfile within $ELogFile for mor
 ##Determines the location where the script is saved and being run from. This will be where your media is downloaded to and setup logs will be saved.
 $Root = $MyInvocation.MyCommand.Path -replace "\\HammerScripts\\InstallHammmerDb.ps1", ""
 ##Command to call the function and start the install
-InstallHammerDb -SourceDir "$Root\HammerScripts" -HamMedia "$Root\HammerMedia\HammerDB-4.1-Win\HammerDB-4.1" -SQLInstance "SQL02" -ELogFileDir "$ErrorLog\SetupLogs\" -Destination "D:\HammerDbBenchmark"
+InstallHammerDb -SourceDir "$Root\HammerScripts" -HamMedia "$Root\HammerMedia\HammerDB-4.1-Win\HammerDB-4.1" -SQLInstance "SQL02" -ELogFileDir "$Root\SetupLogs\" -Destination "D:\HammerDbBenchmark"
 
 
