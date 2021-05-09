@@ -31,9 +31,9 @@
 
     $BaseFolder = "D:\HammerDbBenchmark"
     try {
-        CreateDir -DirectoryToCreate "$BaseFolder\HammerLog" -ComputerName $serverName
-        CreateDir -DirectoryToCreate "$BaseFolder\HammerResults" -ComputerName $serverName
-        CreateDir -DirectoryToCreate "$BaseFolder\HammerProcessed" -ComputerName $serverName
+        CreateLogDirs -DirectoryToCreate "$BaseFolder\HammerLog" 
+        CreateLogDirs -DirectoryToCreate "$BaseFolder\HammerResults" 
+        CreateLogDirs -DirectoryToCreate "$BaseFolder\HammerProcessed" 
     }
     catch {
         Write-Log -Message "Error was: $_" -Severity Error 
@@ -169,4 +169,4 @@
 
 }
 
-##ImportHammerLogs -BaseFolder "D:\HammerDbBenchmark" -HammerLogsFolder "C:\Users\SVC_SQLA\AppData\Local\Temp" -WriteOp "csv" -LogSQLInstance "sql02" -LogDatabase "HammerResults" -LogTable "SQL02_HammerBenchmarkRlt"
+ImportHammerLogs -BaseFolder "D:\HammerDbBenchmark" -HammerLogsFolder "C:\Users\SVC_SQLA\AppData\Local\Temp" -WriteOp "csv" -LogSQLInstance "sql02" -LogDatabase "HammerResults" -LogTable "SQL02_HammerBenchmarkRlt"
