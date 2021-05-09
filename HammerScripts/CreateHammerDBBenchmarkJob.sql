@@ -6,11 +6,11 @@ IF  EXISTS (SELECT job_id FROM msdb.dbo.sysjobs_view WHERE name = N'HammerDB_Ben
 EXEC msdb.dbo.sp_delete_job @job_name=N'HammerDB_BenchMark', @delete_unused_schedule=1
 GO
 
-
+/****** Object:  Job [HammerDB_Benchmark]    Script Date: 09/05/2021 22:38:22 ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [[Uncategorized (Local)]]    Script Date: 15/04/2021 15:15:16 ******/
+/****** Object:  JobCategory [[Uncategorized (Local)]]    Script Date: 09/05/2021 22:38:22 ******/
 IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'[Uncategorized (Local)]' AND category_class=1)
 BEGIN
 EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'[Uncategorized (Local)]'
@@ -30,7 +30,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'HammerDB_Benchmark',
 		@category_name=N'[Uncategorized (Local)]', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [Drop Existing Database]    Script Date: 15/04/2021 15:15:16 ******/
+/****** Object:  Step [Drop Existing Database]    Script Date: 09/05/2021 22:38:22 ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Drop Existing Database', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 
@@ -46,7 +46,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Drop Exi
 		@database_name=N'master', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [Build NewTpcc Database]    Script Date: 15/04/2021 15:15:16 ******/
+/****** Object:  Step [Build NewTpcc Database]    Script Date: 09/05/2021 22:38:22 ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Build NewTpcc Database', 
 		@step_id=2, 
 		@cmdexec_success_code=0, 
@@ -60,26 +60,9 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Build Ne
 		@command=N'cmd.exe /c "D:\HammerDbBenchmark\HammerMedia\AutoRunBuildBatch.cmd"', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [DelayForBuild]    Script Date: 15/04/2021 15:15:16 ******/
-EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'DelayForBuild', 
-		@step_id=3, 
-		@cmdexec_success_code=0, 
-		@on_success_action=3, 
-		@on_success_step_id=0, 
-		@on_fail_action=2, 
-		@on_fail_step_id=0, 
-		@retry_attempts=0, 
-		@retry_interval=0, 
-		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'BEGIN  
-    WAITFOR DELAY ''00:45'';    
-END;  ', 
-		@database_name=N'master', 
-		@flags=0
-IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [ReconfigureDatabase]    Script Date: 15/04/2021 15:15:16 ******/
+/****** Object:  Step [ReconfigureDatabase]    Script Date: 09/05/2021 22:38:22 ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'ReconfigureDatabase', 
-		@step_id=4, 
+		@step_id=3, 
 		@cmdexec_success_code=0, 
 		@on_success_action=3, 
 		@on_success_step_id=0, 
@@ -95,9 +78,9 @@ ALTER DATABASE [tpcc] MODIFY FILE ( NAME = N''tpcc_log'', SIZE = 1048576KB )',
 		@database_name=N'master', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [Run Benchmark]    Script Date: 15/04/2021 15:15:16 ******/
+/****** Object:  Step [Run Benchmark]    Script Date: 09/05/2021 22:38:22 ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Run Benchmark', 
-		@step_id=5, 
+		@step_id=4, 
 		@cmdexec_success_code=0, 
 		@on_success_action=1, 
 		@on_success_step_id=0, 
@@ -119,3 +102,5 @@ QuitWithRollback:
     IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
 EndSave:
 GO
+
+

@@ -37,3 +37,29 @@ if ( -not(Test-Path -LiteralPath $IDirectoryCreate)){
 
 ##CreateDir -DirectoryToCreate "D:\HammerDbBenchmark\" -ComputerName SQL02 
 
+Function CreateLogDirs{
+[cmdletBinding()]
+Param(
+        [parameter(Mandatory = $True)]
+        [string] $DirectoryToCreate)
+
+
+
+
+if ( -not(Test-Path -LiteralPath $DirectoryToCreate)){
+    
+    try{
+        New-Item -Path $DirectoryToCreate -ItemType Directory -ErrorAction Stop | Out-Null
+        }
+    catch{
+            #Write-Log -Message Error was: $_ -Severity Error    
+        #    Write-Error -Message "Unable to Create Directory '$IDirectoryCreate'. Error was: $_" -path $ELogFile -Error
+            }
+            Write-Output "Successfully created directory '$DirectoryToCreate'."
+           # Write-Log -Message "Successfully created directory '$DirectoryToCreate'." -path $ELogFile -Severity Information
+}else {
+        write-output "Directory $DirectoryToCreate Already Existed"
+        return 
+      #  Write-Log -Message "Directory $DirectoryToCreate Already Existed" -path $ELogFile -Severity Information
+        }
+       }
