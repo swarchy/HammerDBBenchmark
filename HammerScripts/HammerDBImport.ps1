@@ -106,12 +106,12 @@
                         $NumUsers = $matches['content']
                     }
 
-                    $found = $line -match "System achieved (?<content>.*) SQL Server"
+                    $found = $line -match "from (?<content>.*) SQL"
                     if ($found) {	
                         $TPM = $matches['content']
                     }
 
-                    $found = $line -match "at (?<content>.*) NOPM"
+                    $found = $line -match "System achieved (?<content>.*) NOPM"
                     if ($found) {	
                         $NOPM = $matches['content']
                     }
