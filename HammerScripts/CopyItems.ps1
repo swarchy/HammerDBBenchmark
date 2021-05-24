@@ -12,4 +12,4 @@ if (Test-Path $FileToCheck -PathType leaf)
 }
 }
 
-##CopyItems -FileToCheck "\\DESKTOP-J7VOGRI\Share\OLA-2020H2\LCCDBA_StartCollection.bat" -NewPath "D:\SQLDBA\ScheduledTasks"
+##CopyItems -FileToCheck "\\Share\OLA-2020H2\LCCDBA_StartCollection.bat" -NewPath "D:\SQLDBA\ScheduledTasks"
